@@ -116,7 +116,7 @@ Public Sub CreateFormNodeSelect()
 
     Set frm = vbp.VBComponents.Add(3)
     frm.Name = "FormNodeSelect"
-    frm.Properties("Caption") = Chr(31680) & Chr(28857) & Chr(30058) & Chr(21495) & Chr(36984) & Chr(25246)
+    frm.Properties("Caption") = ChrW(31680) & ChrW(28857) & ChrW(30058) & ChrW(21495) & ChrW(36984) & ChrW(25246)
     frm.Properties("Width") = 270
     frm.Properties("Height") = 360
 
