@@ -1,5 +1,6 @@
 ' apply_refactor.vbs
 ' Usage: cscript apply_refactor.vbs <full path to xlsm file>
+' After running, open the xlsm and run Module01.CreateFormNodeSelect
 
 Option Explicit
 
@@ -21,7 +22,6 @@ xlApp.DisplayAlerts = False
 Set wb = xlApp.Workbooks.Open(xlsmPath)
 Set vbProj = wb.VBProject
 
-' Remove old/modified modules
 On Error Resume Next
 vbProj.VBComponents.Remove vbProj.VBComponents("Module1")
 Err.Clear
@@ -29,14 +29,14 @@ vbProj.VBComponents.Remove vbProj.VBComponents("UserForm1")
 Err.Clear
 vbProj.VBComponents.Remove vbProj.VBComponents("UserForm2")
 Err.Clear
+vbProj.VBComponents.Remove vbProj.VBComponents("FormNodeSelect")
+Err.Clear
 vbProj.VBComponents.Remove vbProj.VBComponents("ParseSupportReaction")
 Err.Clear
 vbProj.VBComponents.Remove vbProj.VBComponents("Module01")
 Err.Clear
 On Error GoTo 0
 
-' Import all modules from source files
-vbProj.VBComponents.Import srcDir & "FormNodeSelect.frm"
 vbProj.VBComponents.Import srcDir & "ParseSupportReaction.bas"
 vbProj.VBComponents.Import srcDir & "Module01.bas"
 
@@ -44,4 +44,4 @@ wb.Save
 wb.Close
 xlApp.Quit
 
-WScript.Echo "Done."
+WScript.Echo "Done. Next: open the xlsm and run Module01.CreateFormNodeSelect"

@@ -100,3 +100,64 @@ End Sub
 Public Sub RunFilterByNode()
     ParseSupportReaction.FilterByNode
 End Sub
+
+Public Sub CreateFormNodeSelect()
+    Dim vbp As Object
+    Dim frm As Object
+    Dim ctrl As Object
+    Dim cm As Object
+    Dim n As Long
+
+    Set vbp = ThisWorkbook.VBProject
+
+    On Error Resume Next
+    vbp.VBComponents.Remove vbp.VBComponents("FormNodeSelect")
+    On Error GoTo 0
+
+    Set frm = vbp.VBComponents.Add(3)
+    frm.Name = "FormNodeSelect"
+
+    With frm.Designer
+        .Caption = Chr(31680) & Chr(28857) & Chr(30058) & Chr(21495) & Chr(36984) & Chr(25246)
+        .Width = 270
+        .Height = 360
+        .StartUpPosition = 1
+
+        Set ctrl = .Controls.Add("Forms.ListBox.1", "lstNodes")
+        ctrl.Left = 6
+        ctrl.Top = 6
+        ctrl.Width = 258
+        ctrl.Height = 300
+        ctrl.MultiSelect = 1
+
+        Set ctrl = .Controls.Add("Forms.CommandButton.1", "btnOK")
+        ctrl.Caption = "OK"
+        ctrl.Left = 48
+        ctrl.Top = 318
+        ctrl.Width = 72
+        ctrl.Height = 24
+
+        Set ctrl = .Controls.Add("Forms.CommandButton.1", "btnCancel")
+        ctrl.Caption = "Cancel"
+        ctrl.Left = 150
+        ctrl.Top = 318
+        ctrl.Width = 72
+        ctrl.Height = 24
+    End With
+
+    Set cm = frm.CodeModule
+    n = cm.CountOfLines
+    cm.InsertLines n + 1, "Private Sub btnOK_Click()"
+    cm.InsertLines n + 2, "    Me.Tag = ""OK"": Me.Hide"
+    cm.InsertLines n + 3, "End Sub"
+    cm.InsertLines n + 4, "Private Sub btnCancel_Click()"
+    cm.InsertLines n + 5, "    Me.Tag = ""Cancel"": Me.Hide"
+    cm.InsertLines n + 6, "End Sub"
+    cm.InsertLines n + 7, "Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)"
+    cm.InsertLines n + 8, "    If CloseMode = vbFormControlMenu Then"
+    cm.InsertLines n + 9, "        Me.Tag = ""Cancel"": Me.Hide: Cancel = True"
+    cm.InsertLines n + 10, "    End If"
+    cm.InsertLines n + 11, "End Sub"
+
+    MsgBox "FormNodeSelect created.", vbInformation
+End Sub
