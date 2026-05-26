@@ -1,7 +1,8 @@
 Attribute VB_Name = "ParseSupportReaction"
+
 Option Explicit
 
-' 1�p�[�X�Ŏ��W����s�f�[�^
+' 1パースで収集する行データ
 Private Type ReactionRow
     LoadNo   As Long
     loadName As String
@@ -15,7 +16,7 @@ Private Type ReactionRow
 End Type
 
 ' -------------------------------------------------------
-' �A���X�y�[�X�𐳋K������Split
+' 連続スペースを正規化してSplit
 ' -------------------------------------------------------
 Private Function SplitNormalized(ByVal s As String) As String()
     Do While InStr(s, "  ") > 0
@@ -25,27 +26,27 @@ Private Function SplitNormalized(ByVal s As String) As String()
 End Function
 
 ' -------------------------------------------------------
-' �׏d�ԍ��𒊏o: "�׏d�ԍ� =  100" �̐��l����
+' 荷重番号を抽出: "荷重番号 =  100" の数値部分
 ' -------------------------------------------------------
 Private Function ExtractLoadNumber(ByVal line As String) As Long
     Dim pos As Long
     Dim token As String
-    pos = InStr(line, "�׏d�ԍ�")
+    pos = InStr(line, "荷重番号")
     If pos = 0 Then
         ExtractLoadNumber = 0
         Exit Function
     End If
-    ' "�׏d�ԍ� = " �ȍ~����׏d���� ��O�܂Ŏ��o��
-    ' ���s�� "�׏d����" �����邽�߁A���̎�O�Ő؂���
+    ' "荷重番号 = " 以降から荷重名称 手前まで取り出す
+    ' 同行に "荷重名称" があるため、その手前で切り取る
     Dim sub1 As String
     Dim posName As Long
-    posName = InStr(line, "�׏d����")
+    posName = InStr(line, "荷重名称")
     If posName > 0 Then
         sub1 = Mid(line, pos, posName - pos)
     Else
         sub1 = Mid(line, pos)
     End If
-    ' "=" �ȍ~��Trim
+    ' "=" 以降をTrim
     Dim eqPos As Long
     eqPos = InStr(sub1, "=")
     If eqPos = 0 Then
@@ -53,7 +54,7 @@ Private Function ExtractLoadNumber(ByVal line As String) As Long
         Exit Function
     End If
     token = Trim(Mid(sub1, eqPos + 1))
-    ' �擪�̐��l�g�[�N�������o��
+    ' 先頭の数値トークンを取り出す
     token = SplitNormalized(token)(0)
     If IsNumeric(token) Then
         ExtractLoadNumber = CLng(token)
@@ -63,11 +64,11 @@ Private Function ExtractLoadNumber(ByVal line As String) As Long
 End Function
 
 ' -------------------------------------------------------
-' �׏d���̂𒊏o: "�׏d���� =  �i������j" �̕����񕔕�
+' 荷重名称を抽出: "荷重名称 =  （文字列）" の文字列部分
 ' -------------------------------------------------------
 Private Function ExtractLoadName(ByVal line As String) As String
     Dim pos As Long
-    pos = InStr(line, "�׏d����")
+    pos = InStr(line, "荷重名称")
     If pos = 0 Then
         ExtractLoadName = ""
         Exit Function
@@ -84,7 +85,7 @@ Private Function ExtractLoadName(ByVal line As String) As String
 End Function
 
 ' -------------------------------------------------------
-' �w��͈͂�parts�v�f���S��Numeric������
+' 指定範囲のparts要素が全てNumericか検証
 ' -------------------------------------------------------
 Private Function ValidateNumericParts(ByRef parts() As String, _
                                        ByVal fromIdx As Integer, _
@@ -93,7 +94,7 @@ Private Function ValidateNumericParts(ByRef parts() As String, _
     Dim i As Integer
     For i = fromIdx To toIdx
         If Not IsNumeric(parts(i)) Then
-            Debug.Print "Warning: ���l�ϊ����s parts(" & i & ")='" & parts(i) & "' (line " & lineNum & ")"
+            Debug.Print "Warning: 数値変換失敗 parts(" & i & ")='" & parts(i) & "' (line " & lineNum & ")"
             ValidateNumericParts = False
             Exit Function
         End If
@@ -102,7 +103,7 @@ Private Function ValidateNumericParts(ByRef parts() As String, _
 End Function
 
 ' -------------------------------------------------------
-' �ߓ_�ԍ��t�B���^���o
+' 節点番号フィルタ抽出
 ' -------------------------------------------------------
 Public Sub FilterByNode()
 
@@ -119,45 +120,45 @@ Public Sub FilterByNode()
     Dim dstRow As Long
     Dim cellVal As String
 
-    ' --- �X�e�b�v�@ ���e�[�u���V�[�g�I�� ---
-    srcSheetName = InputBox("���o���̃V�[�g������͂��Ă�������" & vbCrLf & _
-                            "�i��F�x�_����_20260525_143022�j", "FilterByNode")
-    If StrPtr(srcSheetName) = 0 Then Exit Sub       ' �L�����Z��
-    If Trim(srcSheetName) = "" Then Exit Sub        ' ����͂��T�C�����g�I��
+    ' --- ステップ① 元テーブルシート選択 ---
+    srcSheetName = InputBox("抽出元のシート名を入力してください" & vbCrLf & _
+                            "（例：支点反力_20260525_143022）", "FilterByNode")
+    If StrPtr(srcSheetName) = 0 Then Exit Sub       ' キャンセル
+    If Trim(srcSheetName) = "" Then Exit Sub        ' 空入力もサイレント終了
 
     On Error Resume Next
     Set srcWs = ThisWorkbook.Worksheets(srcSheetName)
     On Error GoTo 0
     If srcWs Is Nothing Then
-        MsgBox "�V�[�g�u" & srcSheetName & "�v��������܂���B", vbCritical, "FilterByNode"
+        MsgBox "シート「" & srcSheetName & "」が見つかりません。", vbCritical, "FilterByNode"
         Exit Sub
     End If
 
-    ' --- �X�e�b�v�A �ߓ_�ԍ����X�g���� ---
-    nodeInput = InputBox("���o����ߓ_�ԍ����J���}��؂�œ��͂��Ă�������" & vbCrLf & _
-                         "�i��F 1,3,���v�@�܂��́@���v�j", "FilterByNode")
-    If StrPtr(nodeInput) = 0 Then Exit Sub          ' �L�����Z��
+    ' --- ステップ② 節点番号リスト入力 ---
+    nodeInput = InputBox("抽出する節点番号をカンマ区切りで入力してください" & vbCrLf & _
+                         "（例： 1,3,合計　または　合計）", "FilterByNode")
+    If StrPtr(nodeInput) = 0 Then Exit Sub          ' キャンセル
     If Trim(nodeInput) = "" Then
-        MsgBox "�ߓ_�ԍ������͂���Ă��܂���B", vbExclamation, "FilterByNode"
+        MsgBox "節点番号が入力されていません。", vbExclamation, "FilterByNode"
         Exit Sub
     End If
 
-    ' �J���}Split���Ċe�v�f��Trim
+    ' カンマSplitして各要素をTrim
     nodeTokens = Split(nodeInput, ",")
     For i = 0 To UBound(nodeTokens)
         nodeTokens(i) = Trim(nodeTokens(i))
     Next i
 
-    ' --- �V�K�V�[�g�쐬 ---
-    dstSheetName = "���o_" & Format(Now, "YYYYMMDD_HHMMSS")
+    ' --- 新規シート作成 ---
+    dstSheetName = "抽出_" & Format(Now, "YYYYMMDD_HHMMSS")
     Set dstWs = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
     dstWs.Name = dstSheetName
 
-    ' --- �w�b�_�[�R�s�[ ---
+    ' --- ヘッダーコピー ---
     dstWs.rows(1).Value = srcWs.rows(1).Value
     dstRow = 2
 
-    ' --- �f�[�^�s���� ---
+    ' --- データ行走査 ---
     lastRow = srcWs.Cells(srcWs.rows.Count, 1).End(xlUp).Row
 
     Dim extractCount As Long
@@ -172,20 +173,20 @@ Public Sub FilterByNode()
         End If
     Next i
 
-    ' --- �������b�Z�[�W ---
+    ' --- 完了メッセージ ---
     If extractCount = 0 Then
-        MsgBox "�Y������ߓ_�ԍ��̍s������܂���ł����B" & vbCrLf & _
-               "�o�̓V�[�g��: " & dstSheetName, vbExclamation, "FilterByNode"
+        MsgBox "該当する節点番号の行がありませんでした。" & vbCrLf & _
+               "出力シート名: " & dstSheetName, vbExclamation, "FilterByNode"
     Else
-        MsgBox "�������܂����B" & vbCrLf & _
-               "�o�̓V�[�g��: " & dstSheetName & vbCrLf & _
-               "���o�s��: " & extractCount & " �s", vbInformation, "FilterByNode"
+        MsgBox "完了しました。" & vbCrLf & _
+               "出力シート名: " & dstSheetName & vbCrLf & _
+               "抽出行数: " & extractCount & " 行", vbInformation, "FilterByNode"
     End If
 
 End Sub
 
 ' -------------------------------------------------------
-' �ߓ_�ԍ����X�g��v����
+' 節点番号リスト一致判定
 ' -------------------------------------------------------
 Private Function IsInList(ByVal target As String, ByRef list() As String) As Boolean
     Dim i As Integer
@@ -199,22 +200,22 @@ Private Function IsInList(ByVal target As String, ByRef list() As String) As Boo
 End Function
 
 ' -------------------------------------------------------
-' txt��1�p�[�X���ăt�H�[���Őߓ_�I�� �� �V�K�V�[�g�֓]�L
+' txtを1パースしてフォームで節点選択 → 新規シートへ転記
 ' -------------------------------------------------------
 Public Sub ParseAndSelectNodes()
 
-    ' --- �t�@�C���I�� ---
+    ' --- ファイル選択 ---
     Dim fd As FileDialog
     Set fd = Application.FileDialog(msoFileDialogFilePicker)
-    fd.Title = "�x�_���̓e�L�X�g�t�@�C����I�����Ă�������"
+    fd.Title = "支点反力テキストファイルを選択してください"
     fd.Filters.Clear
-    fd.Filters.Add "�e�L�X�g�t�@�C��", "*.txt"
+    fd.Filters.Add "テキストファイル", "*.txt"
     fd.AllowMultiSelect = False
     If fd.Show <> True Then Exit Sub
     Dim filePath As String
     filePath = fd.SelectedItems(1)
 
-    ' --- ��1�p�[�X�F�S�s���W & �ߓ_�ԍ����j�[�N���X�g ---
+    ' --- 第1パース：全行収集 & 節点番号ユニークリスト ---
     Dim rows()    As ReactionRow
     Dim rowCount  As Long
     Dim nodeList() As String
@@ -248,25 +249,25 @@ Public Sub ParseAndSelectNodes()
 
         If Len(trimmedLine) = 0 Then GoTo Skip1
         If Left(trimmedLine, 5) = "=====" Then GoTo Skip1
-        If InStr(line, "�׏d�ԍ�") > 0 Then
+        If InStr(line, "荷重番号") > 0 Then
             loadNumber = ExtractLoadNumber(line)
             loadName = ExtractLoadName(line)
             GoTo Skip1
         End If
-        If InStr(trimmedLine, "�ߓ_�ԍ�") > 0 Then GoTo Skip1
+        If InStr(trimmedLine, "節点番号") > 0 Then GoTo Skip1
 
-        If Left(trimmedLine, 2) = "���v" Then
+        If Left(trimmedLine, 2) = "合計" Then
             parts = SplitNormalized(trimmedLine)
             If UBound(parts) < 6 Then
-                Debug.Print "Warning: ���v�s�t�B�[���h�s�� (line " & lineNum & ")"
+                Debug.Print "Warning: 合計行フィールド不足 (line " & lineNum & ")"
                 GoTo Skip1
             End If
             If Not ValidateNumericParts(parts, 1, 6, lineNum) Then GoTo Skip1
-            nodeStr = "���v"
+            nodeStr = "合計"
         ElseIf IsNumeric(Left(trimmedLine, InStr(trimmedLine & " ", " ") - 1)) Then
             parts = SplitNormalized(trimmedLine)
             If UBound(parts) < 6 Then
-                Debug.Print "Warning: �ߓ_�s�t�B�[���h�s�� (line " & lineNum & ")"
+                Debug.Print "Warning: 節点行フィールド不足 (line " & lineNum & ")"
                 GoTo Skip1
             End If
             If Not IsNumeric(parts(0)) Then GoTo Skip1
@@ -287,7 +288,7 @@ Public Sub ParseAndSelectNodes()
         rows(rowCount).rmx = rmx: rows(rowCount).rmy = rmy: rows(rowCount).rmz = rmz
         rowCount = rowCount + 1
 
-        ' �o�������j�[�N���X�g�֒ǉ�
+        ' 出現順ユニークリストへ追加
         Dim alreadyExists As Boolean
         alreadyExists = False
         If nodeCount > 0 Then alreadyExists = IsInList(nodeStr, nodeList)
@@ -301,11 +302,11 @@ Skip1:
     Close #fileNum
 
     If rowCount = 0 Then
-        MsgBox "�f�[�^�s��������܂���ł����B", vbExclamation, "ParseAndSelectNodes"
+        MsgBox "データ行が見つかりませんでした。", vbExclamation, "ParseAndSelectNodes"
         Exit Sub
     End If
 
-    ' --- FormNodeSelect �Őߓ_�I�� ---
+    ' --- FormNodeSelect で節点選択 ---
     Dim frm As FormNodeSelect
     Set frm = New FormNodeSelect
     Dim j As Integer
@@ -332,25 +333,25 @@ Skip1:
     Unload frm
 
     If selCount = 0 Then
-        MsgBox "�ߓ_�ԍ����I������Ă��܂���B", vbExclamation, "ParseAndSelectNodes"
+        MsgBox "節点番号が選択されていません。", vbExclamation, "ParseAndSelectNodes"
         Exit Sub
     End If
 
-    ' --- �V�K�V�[�g�쐬 & �w�b�_�[ ---
+    ' --- 新規シート作成 & ヘッダー ---
     Dim ws As Worksheet
     Dim sheetName As String
-    sheetName = "�x�_����_" & Format(Now, "YYYYMMDD_HHMMSS")
+    sheetName = "支点反力_" & Format(Now, "YYYYMMDD_HHMMSS")
     Set ws = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
     ws.Name = sheetName
 
     Dim headers As Variant
-    headers = Array("�׏d�ԍ�", "�׏d����", "�ߓ_�ԍ�", "RX", "RY", "RZ", "RMX", "RMY", "RMZ")
+    headers = Array("荷重番号", "荷重名称", "節点番号", "RX", "RY", "RZ", "RMX", "RMY", "RMZ")
     Dim c As Integer
     For c = 0 To 8
         ws.Cells(1, c + 1).Value = headers(c)
     Next c
 
-    ' --- �]�L ---
+    ' --- 転記 ---
     Dim rowIdx As Long
     rowIdx = 2
     Dim k As Long
@@ -373,18 +374,18 @@ Skip1:
         End If
     Next k
 
-    MsgBox "�������܂����B" & vbCrLf & _
-           "�o�̓V�[�g��: " & sheetName & vbCrLf & _
-           "�]�L�s��: " & (rowIdx - 2) & " �s", vbInformation, "ParseAndSelectNodes"
+    MsgBox "完了しました。" & vbCrLf & _
+           "出力シート名: " & sheetName & vbCrLf & _
+           "転記行数: " & (rowIdx - 2) & " 行", vbInformation, "ParseAndSelectNodes"
     Exit Sub
 
 FileOpenError2:
-    MsgBox "�t�@�C�����J���܂���ł����B" & vbCrLf & Err.Description, vbCritical, "ParseAndSelectNodes"
+    MsgBox "ファイルを開けませんでした。" & vbCrLf & Err.Description, vbCritical, "ParseAndSelectNodes"
 
 End Sub
 
 ' -------------------------------------------------------
-' 1�s�����V�[�g�֏�������
+' 1行分をシートへ書き込む
 ' -------------------------------------------------------
 Private Sub WriteRow(ByVal ws As Worksheet, ByVal rowIdx As Long, _
                      ByVal loadNum As Long, ByVal loadNm As String, _
@@ -393,7 +394,7 @@ Private Sub WriteRow(ByVal ws As Worksheet, ByVal rowIdx As Long, _
                      ByVal rmx As Double, ByVal rmy As Double, ByVal rmz As Double)
     ws.Cells(rowIdx, 1).Value = loadNum
     ws.Cells(rowIdx, 2).Value = loadNm
-    ' �ߓ_�ԍ������l������Ȃ� Long�A"���v"�Ȃ炻�̂܂ܕ�����
+    ' 節点番号が数値文字列なら Long、"合計"ならそのまま文字列
     If IsNumeric(nodeVal) Then
         ws.Cells(rowIdx, 3).Value = CLng(nodeVal)
     Else

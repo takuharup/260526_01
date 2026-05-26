@@ -76,8 +76,8 @@ Public Sub SaveDatFile(content As String)
 
     savePath = Application.GetSaveAsFilename( _
         InitialFileName:=defaultPath, _
-        FileFilter:="DAT�t�@�C�� (*.dat), *.dat", _
-        Title:="�ۑ����I�����Ă�������")
+        FileFilter:="DATファイル (*.dat), *.dat", _
+        Title:="保存先を選択してください")
 
     If savePath = False Then Exit Sub
 
@@ -86,7 +86,7 @@ Public Sub SaveDatFile(content As String)
     Print #fileNum, content
     Close #fileNum
 
-    MsgBox "�ۑ����܂���: " & CStr(savePath), vbInformation
+    MsgBox "保存しました: " & CStr(savePath), vbInformation
 End Sub
 
 Public Sub ShowForm()

@@ -318,11 +318,22 @@ def patch_ole_dir_entries(vba_bin: bytearray, old_name: str, new_name: str):
     new_utf16_padded[:len(new_encoded)] = new_encoded
     new_name_len = len(new_encoded)
 
+    # Multi-FAT-sector aware fat() — same logic as patch_ole_stream
+    num_fat = struct.unpack_from('<I', vba_bin, 44)[0]
+    fat_secs = []
+    for i in range(min(num_fat, 109)):
+        s = struct.unpack_from('<I', vba_bin, 76 + i * 4)[0]
+        if s != 0xFFFFFFFF:
+            fat_secs.append(s)
+
     def fat(sec):
         entries = sector_size // 4
-        # Assume single FAT sector at sector 0
-        off = 512 + struct.unpack_from('<I', vba_bin, 76)[0] * sector_size + sec * 4
-        return struct.unpack_from('<I', vba_bin, off)[0]
+        for i, fs in enumerate(fat_secs):
+            base = i * entries
+            if sec < base + entries:
+                off = 512 + fs * sector_size + (sec - base) * 4
+                return struct.unpack_from('<I', vba_bin, off)[0]
+        return 0xFFFFFFFE
 
     sec = first_dir_sec
     visited = set()
