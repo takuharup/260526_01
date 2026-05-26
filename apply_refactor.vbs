@@ -1,14 +1,15 @@
 '+------------------------------------------------------------------
 ' apply_refactor.vbs
 '
-' 使い方:
+' Usage:
 '   cscript apply_refactor.vbs
-'   （スクリプトと test_260525_03.xlsm を同じフォルダに置いて実行）
 '
-' 事前設定:
-'   Excel > ファイル > オプション > セキュリティセンター
-'   > セキュリティセンターの設定 > マクロの設定
-'   > [VBA プロジェクト オブジェクト モデルへのアクセスを信頼する] にチェック
+' Place this script in the same folder as test_260525_03.xlsm
+' and the test_260525_03\ subfolder.
+'
+' Requirement:
+'   Excel > Options > Trust Center > Trust Center Settings
+'   > Macro Settings > check "Trust access to the VBA project object model"
 '+------------------------------------------------------------------
 Option Explicit
 
@@ -19,17 +20,17 @@ xlsm_path  = fso.BuildPath(script_dir, "test_260525_03.xlsm")
 src_dir    = fso.BuildPath(script_dir, "test_260525_03")
 
 If Not fso.FileExists(xlsm_path) Then
-    WScript.Echo "ERROR: xlsm が見つかりません: " & xlsm_path
+    WScript.Echo "ERROR: xlsm not found: " & xlsm_path
     WScript.Quit 1
 End If
 
-WScript.Echo "Excel を起動しています..."
+WScript.Echo "Opening Excel..."
 Dim xl
 Set xl = CreateObject("Excel.Application")
-xl.Visible        = False
-xl.DisplayAlerts  = False
+xl.Visible       = False
+xl.DisplayAlerts = False
 
-WScript.Echo "ファイルを開いています: " & xlsm_path
+WScript.Echo "Opening: " & xlsm_path
 Dim wb
 Set wb = xl.Workbooks.Open(xlsm_path)
 
@@ -39,18 +40,14 @@ Set vbp = wb.VBProject
 On Error GoTo 0
 
 If vbp Is Nothing Then
-    WScript.Echo "ERROR: VBA プロジェクトにアクセスできません。"
-    WScript.Echo "       Excel のセキュリティセンターで"
-    WScript.Echo "       [VBA プロジェクト オブジェクト モデルへのアクセスを信頼する]"
-    WScript.Echo "       を有効にしてから再実行してください。"
+    WScript.Echo "ERROR: Cannot access VBA project."
+    WScript.Echo "  Enable [Trust access to the VBA project object model] in Excel Trust Center."
     wb.Close False
     xl.Quit
     WScript.Quit 1
 End If
 
-' ----------------------------------------------------------------
-' Step 1: 不要モジュール削除
-' ----------------------------------------------------------------
+'--- Step 1: Remove old modules ---
 Dim del_list(2)
 del_list(0) = "Module1"
 del_list(1) = "UserForm1"
@@ -64,26 +61,21 @@ For i = 0 To 2
     On Error GoTo 0
     If Not comp Is Nothing Then
         vbp.VBComponents.Remove comp
-        WScript.Echo "  削除: " & del_list(i)
+        WScript.Echo "  Removed: " & del_list(i)
     End If
 Next
 
-' ----------------------------------------------------------------
-' Step 2: FormNodeSelect をインポート（frm + frx をセットで）
-'   ※ frx は frm と同じフォルダに同名で置いておく必要あり
-' ----------------------------------------------------------------
+'--- Step 2: Import FormNodeSelect (frm + frx must be in same folder) ---
 Dim frm_path
 frm_path = fso.BuildPath(src_dir, "FormNodeSelect.frm")
 If fso.FileExists(frm_path) Then
     vbp.VBComponents.Import frm_path
-    WScript.Echo "  インポート: FormNodeSelect"
+    WScript.Echo "  Imported: FormNodeSelect"
 Else
-    WScript.Echo "  WARNING: FormNodeSelect.frm が見つかりません: " & frm_path
+    WScript.Echo "  WARNING: FormNodeSelect.frm not found: " & frm_path
 End If
 
-' ----------------------------------------------------------------
-' Step 3: ParseSupportReaction から Option Private Module を削除
-' ----------------------------------------------------------------
+'--- Step 3: Remove Option Private Module from ParseSupportReaction ---
 Set comp = Nothing
 On Error Resume Next
 Set comp = vbp.VBComponents("ParseSupportReaction")
@@ -96,15 +88,13 @@ If Not comp Is Nothing Then
         line_text = cm.Lines(n, 1)
         If Trim(line_text) = "Option Private Module" Then
             cm.DeleteLines n, 1
-            WScript.Echo "  削除: ParseSupportReaction の Option Private Module"
+            WScript.Echo "  Removed: Option Private Module from ParseSupportReaction"
             Exit For
         End If
     Next
 End If
 
-' ----------------------------------------------------------------
-' Step 4: Module01 にラッパーサブを追加
-' ----------------------------------------------------------------
+'--- Step 4: Add wrapper subs to Module01 ---
 Set comp = Nothing
 On Error Resume Next
 Set comp = vbp.VBComponents("Module01")
@@ -124,19 +114,17 @@ If Not comp Is Nothing Then
         cm.InsertLines n + 6, "Public Sub RunFilterByNode()"
         cm.InsertLines n + 7, "    ParseSupportReaction.FilterByNode"
         cm.InsertLines n + 8, "End Sub"
-        WScript.Echo "  追加: Module01 にラッパーサブ"
+        WScript.Echo "  Added: wrapper subs to Module01"
     Else
-        WScript.Echo "  スキップ: Module01 のラッパーサブは既に存在"
+        WScript.Echo "  Skipped: wrapper subs already exist in Module01"
     End If
 End If
 
-' ----------------------------------------------------------------
-' 保存して終了
-' ----------------------------------------------------------------
+'--- Save and close ---
 wb.Save
 wb.Close False
 xl.Quit
 Set xl = Nothing
 
 WScript.Echo ""
-WScript.Echo "完了: " & xlsm_path
+WScript.Echo "Done: " & xlsm_path
