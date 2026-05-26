@@ -76,8 +76,8 @@ Public Sub SaveDatFile(content As String)
 
     savePath = Application.GetSaveAsFilename( _
         InitialFileName:=defaultPath, _
-        FileFilter:="DATƒtƒ@ƒCƒ‹ (*.dat), *.dat", _
-        Title:="•Û‘¶æ‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢")
+        FileFilter:="DATï¿½tï¿½@ï¿½Cï¿½ï¿½ (*.dat), *.dat", _
+        Title:="ï¿½Û‘ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")
 
     If savePath = False Then Exit Sub
 
@@ -86,9 +86,17 @@ Public Sub SaveDatFile(content As String)
     Print #fileNum, content
     Close #fileNum
 
-    MsgBox "•Û‘¶‚µ‚Ü‚µ‚½: " & CStr(savePath), vbInformation
+    MsgBox "ï¿½Û‘ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½: " & CStr(savePath), vbInformation
 End Sub
 
 Public Sub ShowForm()
     UserForm01.Show
+End Sub
+
+Public Sub RunParseAndSelectNodes()
+    ParseSupportReaction.ParseAndSelectNodes
+End Sub
+
+Public Sub RunFilterByNode()
+    ParseSupportReaction.FilterByNode
 End Sub
