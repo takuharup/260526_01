@@ -31,8 +31,9 @@ xl.Visible       = False
 xl.DisplayAlerts = False
 
 WScript.Echo "Opening: " & xlsm_path
+xl.AutomationSecurity = 1  ' msoAutomationSecurityLow: suppress macro security dialogs
 Dim wb
-Set wb = xl.Workbooks.Open(xlsm_path)
+Set wb = xl.Workbooks.Open(xlsm_path, 0, False)
 
 Dim vbp
 On Error Resume Next
