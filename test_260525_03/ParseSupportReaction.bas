@@ -1,9 +1,7 @@
 Attribute VB_Name = "ParseSupportReaction"
-Option Private Module
-
 Option Explicit
 
-' 1ƒp[ƒX‚ÅûW‚·‚ésƒf[ƒ^
+' 1ï¿½pï¿½[ï¿½Xï¿½Åï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½sï¿½fï¿½[ï¿½^
 Private Type ReactionRow
     LoadNo   As Long
     loadName As String
@@ -17,7 +15,7 @@ Private Type ReactionRow
 End Type
 
 ' -------------------------------------------------------
-' ˜A‘±ƒXƒy[ƒX‚ğ³‹K‰»‚µ‚ÄSplit
+' ï¿½Aï¿½ï¿½ï¿½Xï¿½yï¿½[ï¿½Xï¿½ğ³‹Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Split
 ' -------------------------------------------------------
 Private Function SplitNormalized(ByVal s As String) As String()
     Do While InStr(s, "  ") > 0
@@ -27,27 +25,27 @@ Private Function SplitNormalized(ByVal s As String) As String()
 End Function
 
 ' -------------------------------------------------------
-' ‰×d”Ô†‚ğ’Šo: "‰×d”Ô† =  100" ‚Ì”’l•”•ª
+' ï¿½×dï¿½Ôï¿½ï¿½ğ’Šo: "ï¿½×dï¿½Ôï¿½ =  100" ï¿½Ìï¿½ï¿½lï¿½ï¿½ï¿½ï¿½
 ' -------------------------------------------------------
 Private Function ExtractLoadNumber(ByVal line As String) As Long
     Dim pos As Long
     Dim token As String
-    pos = InStr(line, "‰×d”Ô†")
+    pos = InStr(line, "ï¿½×dï¿½Ôï¿½")
     If pos = 0 Then
         ExtractLoadNumber = 0
         Exit Function
     End If
-    ' "‰×d”Ô† = " ˆÈ~‚©‚ç‰×d–¼Ì è‘O‚Ü‚Åæ‚èo‚·
-    ' “¯s‚É "‰×d–¼Ì" ‚ª‚ ‚é‚½‚ßA‚»‚Ìè‘O‚ÅØ‚èæ‚é
+    ' "ï¿½×dï¿½Ôï¿½ = " ï¿½È~ï¿½ï¿½ï¿½ï¿½×dï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Oï¿½Ü‚Åï¿½ï¿½oï¿½ï¿½
+    ' ï¿½ï¿½ï¿½sï¿½ï¿½ "ï¿½×dï¿½ï¿½ï¿½ï¿½" ï¿½ï¿½ï¿½ï¿½ï¿½é‚½ï¿½ßAï¿½ï¿½ï¿½Ìï¿½Oï¿½ÅØ‚ï¿½ï¿½ï¿½
     Dim sub1 As String
     Dim posName As Long
-    posName = InStr(line, "‰×d–¼Ì")
+    posName = InStr(line, "ï¿½×dï¿½ï¿½ï¿½ï¿½")
     If posName > 0 Then
         sub1 = Mid(line, pos, posName - pos)
     Else
         sub1 = Mid(line, pos)
     End If
-    ' "=" ˆÈ~‚ğTrim
+    ' "=" ï¿½È~ï¿½ï¿½Trim
     Dim eqPos As Long
     eqPos = InStr(sub1, "=")
     If eqPos = 0 Then
@@ -55,7 +53,7 @@ Private Function ExtractLoadNumber(ByVal line As String) As Long
         Exit Function
     End If
     token = Trim(Mid(sub1, eqPos + 1))
-    ' æ“ª‚Ì”’lƒg[ƒNƒ“‚ğæ‚èo‚·
+    ' ï¿½æ“ªï¿½Ìï¿½ï¿½lï¿½gï¿½[ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½
     token = SplitNormalized(token)(0)
     If IsNumeric(token) Then
         ExtractLoadNumber = CLng(token)
@@ -65,11 +63,11 @@ Private Function ExtractLoadNumber(ByVal line As String) As Long
 End Function
 
 ' -------------------------------------------------------
-' ‰×d–¼Ì‚ğ’Šo: "‰×d–¼Ì =  i•¶š—ñj" ‚Ì•¶š—ñ•”•ª
+' ï¿½×dï¿½ï¿½ï¿½Ì‚ğ’Šo: "ï¿½×dï¿½ï¿½ï¿½ï¿½ =  ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j" ï¿½Ì•ï¿½ï¿½ï¿½ï¿½ñ•”•ï¿½
 ' -------------------------------------------------------
 Private Function ExtractLoadName(ByVal line As String) As String
     Dim pos As Long
-    pos = InStr(line, "‰×d–¼Ì")
+    pos = InStr(line, "ï¿½×dï¿½ï¿½ï¿½ï¿½")
     If pos = 0 Then
         ExtractLoadName = ""
         Exit Function
@@ -86,7 +84,7 @@ Private Function ExtractLoadName(ByVal line As String) As String
 End Function
 
 ' -------------------------------------------------------
-' w’è”ÍˆÍ‚Ìparts—v‘f‚ª‘S‚ÄNumeric‚©ŒŸØ
+' ï¿½wï¿½ï¿½ÍˆÍ‚ï¿½partsï¿½vï¿½fï¿½ï¿½ï¿½Sï¿½ï¿½Numericï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ' -------------------------------------------------------
 Private Function ValidateNumericParts(ByRef parts() As String, _
                                        ByVal fromIdx As Integer, _
@@ -95,7 +93,7 @@ Private Function ValidateNumericParts(ByRef parts() As String, _
     Dim i As Integer
     For i = fromIdx To toIdx
         If Not IsNumeric(parts(i)) Then
-            Debug.Print "Warning: ”’l•ÏŠ·¸”s parts(" & i & ")='" & parts(i) & "' (line " & lineNum & ")"
+            Debug.Print "Warning: ï¿½ï¿½ï¿½lï¿½ÏŠï¿½ï¿½ï¿½ï¿½s parts(" & i & ")='" & parts(i) & "' (line " & lineNum & ")"
             ValidateNumericParts = False
             Exit Function
         End If
@@ -104,7 +102,7 @@ Private Function ValidateNumericParts(ByRef parts() As String, _
 End Function
 
 ' -------------------------------------------------------
-' ß“_”Ô†ƒtƒBƒ‹ƒ^’Šo
+' ï¿½ß“_ï¿½Ôï¿½ï¿½tï¿½Bï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½o
 ' -------------------------------------------------------
 Public Sub FilterByNode()
 
@@ -121,45 +119,45 @@ Public Sub FilterByNode()
     Dim dstRow As Long
     Dim cellVal As String
 
-    ' --- ƒXƒeƒbƒv‡@ Œ³ƒe[ƒuƒ‹ƒV[ƒg‘I‘ğ ---
-    srcSheetName = InputBox("’ŠoŒ³‚ÌƒV[ƒg–¼‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢" & vbCrLf & _
-                            "i—áFx“_”½—Í_20260525_143022j", "FilterByNode")
-    If StrPtr(srcSheetName) = 0 Then Exit Sub       ' ƒLƒƒƒ“ƒZƒ‹
-    If Trim(srcSheetName) = "" Then Exit Sub        ' ‹ó“ü—Í‚àƒTƒCƒŒƒ“ƒgI—¹
+    ' --- ï¿½Xï¿½eï¿½bï¿½vï¿½@ ï¿½ï¿½ï¿½eï¿½[ï¿½uï¿½ï¿½ï¿½Vï¿½[ï¿½gï¿½Iï¿½ï¿½ ---
+    srcSheetName = InputBox("ï¿½ï¿½ï¿½oï¿½ï¿½ï¿½ÌƒVï¿½[ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" & vbCrLf & _
+                            "ï¿½iï¿½ï¿½Fï¿½xï¿½_ï¿½ï¿½ï¿½ï¿½_20260525_143022ï¿½j", "FilterByNode")
+    If StrPtr(srcSheetName) = 0 Then Exit Sub       ' ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½
+    If Trim(srcSheetName) = "" Then Exit Sub        ' ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½Tï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½gï¿½Iï¿½ï¿½
 
     On Error Resume Next
     Set srcWs = ThisWorkbook.Worksheets(srcSheetName)
     On Error GoTo 0
     If srcWs Is Nothing Then
-        MsgBox "ƒV[ƒgu" & srcSheetName & "v‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB", vbCritical, "FilterByNode"
+        MsgBox "ï¿½Vï¿½[ï¿½gï¿½u" & srcSheetName & "ï¿½vï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½B", vbCritical, "FilterByNode"
         Exit Sub
     End If
 
-    ' --- ƒXƒeƒbƒv‡A ß“_”Ô†ƒŠƒXƒg“ü—Í ---
-    nodeInput = InputBox("’Šo‚·‚éß“_”Ô†‚ğƒJƒ“ƒ}‹æØ‚è‚Å“ü—Í‚µ‚Ä‚­‚¾‚³‚¢" & vbCrLf & _
-                         "i—áF 1,3,‡Œv@‚Ü‚½‚Í@‡Œvj", "FilterByNode")
-    If StrPtr(nodeInput) = 0 Then Exit Sub          ' ƒLƒƒƒ“ƒZƒ‹
+    ' --- ï¿½Xï¿½eï¿½bï¿½vï¿½A ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½Xï¿½gï¿½ï¿½ï¿½ï¿½ ---
+    nodeInput = InputBox("ï¿½ï¿½ï¿½oï¿½ï¿½ï¿½ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½Jï¿½ï¿½ï¿½}ï¿½ï¿½Ø‚ï¿½Å“ï¿½ï¿½Í‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" & vbCrLf & _
+                         "ï¿½iï¿½ï¿½F 1,3,ï¿½ï¿½ï¿½vï¿½@ï¿½Ü‚ï¿½ï¿½Í@ï¿½ï¿½ï¿½vï¿½j", "FilterByNode")
+    If StrPtr(nodeInput) = 0 Then Exit Sub          ' ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½
     If Trim(nodeInput) = "" Then
-        MsgBox "ß“_”Ô†‚ª“ü—Í‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB", vbExclamation, "FilterByNode"
+        MsgBox "ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½B", vbExclamation, "FilterByNode"
         Exit Sub
     End If
 
-    ' ƒJƒ“ƒ}Split‚µ‚ÄŠe—v‘f‚ğTrim
+    ' ï¿½Jï¿½ï¿½ï¿½}Splitï¿½ï¿½ï¿½ÄŠeï¿½vï¿½fï¿½ï¿½Trim
     nodeTokens = Split(nodeInput, ",")
     For i = 0 To UBound(nodeTokens)
         nodeTokens(i) = Trim(nodeTokens(i))
     Next i
 
-    ' --- V‹KƒV[ƒgì¬ ---
-    dstSheetName = "’Šo_" & Format(Now, "YYYYMMDD_HHMMSS")
+    ' --- ï¿½Vï¿½Kï¿½Vï¿½[ï¿½gï¿½ì¬ ---
+    dstSheetName = "ï¿½ï¿½ï¿½o_" & Format(Now, "YYYYMMDD_HHMMSS")
     Set dstWs = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
     dstWs.Name = dstSheetName
 
-    ' --- ƒwƒbƒ_[ƒRƒs[ ---
+    ' --- ï¿½wï¿½bï¿½_ï¿½[ï¿½Rï¿½sï¿½[ ---
     dstWs.rows(1).Value = srcWs.rows(1).Value
     dstRow = 2
 
-    ' --- ƒf[ƒ^s‘–¸ ---
+    ' --- ï¿½fï¿½[ï¿½^ï¿½sï¿½ï¿½ï¿½ï¿½ ---
     lastRow = srcWs.Cells(srcWs.rows.Count, 1).End(xlUp).Row
 
     Dim extractCount As Long
@@ -174,20 +172,20 @@ Public Sub FilterByNode()
         End If
     Next i
 
-    ' --- Š®—¹ƒƒbƒZ[ƒW ---
+    ' --- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bï¿½Zï¿½[ï¿½W ---
     If extractCount = 0 Then
-        MsgBox "ŠY“–‚·‚éß“_”Ô†‚Ìs‚ª‚ ‚è‚Ü‚¹‚ñ‚Å‚µ‚½B" & vbCrLf & _
-               "o—ÍƒV[ƒg–¼: " & dstSheetName, vbExclamation, "FilterByNode"
+        MsgBox "ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß“_ï¿½Ôï¿½ï¿½Ìsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½B" & vbCrLf & _
+               "ï¿½oï¿½ÍƒVï¿½[ï¿½gï¿½ï¿½: " & dstSheetName, vbExclamation, "FilterByNode"
     Else
-        MsgBox "Š®—¹‚µ‚Ü‚µ‚½B" & vbCrLf & _
-               "o—ÍƒV[ƒg–¼: " & dstSheetName & vbCrLf & _
-               "’Šos”: " & extractCount & " s", vbInformation, "FilterByNode"
+        MsgBox "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B" & vbCrLf & _
+               "ï¿½oï¿½ÍƒVï¿½[ï¿½gï¿½ï¿½: " & dstSheetName & vbCrLf & _
+               "ï¿½ï¿½ï¿½oï¿½sï¿½ï¿½: " & extractCount & " ï¿½s", vbInformation, "FilterByNode"
     End If
 
 End Sub
 
 ' -------------------------------------------------------
-' ß“_”Ô†ƒŠƒXƒgˆê’v”»’è
+' ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½Xï¿½gï¿½ï¿½vï¿½ï¿½ï¿½ï¿½
 ' -------------------------------------------------------
 Private Function IsInList(ByVal target As String, ByRef list() As String) As Boolean
     Dim i As Integer
@@ -201,22 +199,22 @@ Private Function IsInList(ByVal target As String, ByRef list() As String) As Boo
 End Function
 
 ' -------------------------------------------------------
-' txt‚ğ1ƒp[ƒX‚µ‚ÄƒtƒH[ƒ€‚Åß“_‘I‘ğ ¨ V‹KƒV[ƒg‚Ö“]‹L
+' txtï¿½ï¿½1ï¿½pï¿½[ï¿½Xï¿½ï¿½ï¿½Äƒtï¿½Hï¿½[ï¿½ï¿½ï¿½Åß“_ï¿½Iï¿½ï¿½ ï¿½ï¿½ ï¿½Vï¿½Kï¿½Vï¿½[ï¿½gï¿½Ö“]ï¿½L
 ' -------------------------------------------------------
 Public Sub ParseAndSelectNodes()
 
-    ' --- ƒtƒ@ƒCƒ‹‘I‘ğ ---
+    ' --- ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½Iï¿½ï¿½ ---
     Dim fd As FileDialog
     Set fd = Application.FileDialog(msoFileDialogFilePicker)
-    fd.Title = "x“_”½—ÍƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢"
+    fd.Title = "ï¿½xï¿½_ï¿½ï¿½ï¿½Íƒeï¿½Lï¿½Xï¿½gï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
     fd.Filters.Clear
-    fd.Filters.Add "ƒeƒLƒXƒgƒtƒ@ƒCƒ‹", "*.txt"
+    fd.Filters.Add "ï¿½eï¿½Lï¿½Xï¿½gï¿½tï¿½@ï¿½Cï¿½ï¿½", "*.txt"
     fd.AllowMultiSelect = False
     If fd.Show <> True Then Exit Sub
     Dim filePath As String
     filePath = fd.SelectedItems(1)
 
-    ' --- ‘æ1ƒp[ƒXF‘SsûW & ß“_”Ô†ƒ†ƒj[ƒNƒŠƒXƒg ---
+    ' --- ï¿½ï¿½1ï¿½pï¿½[ï¿½Xï¿½Fï¿½Sï¿½sï¿½ï¿½ï¿½W & ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½jï¿½[ï¿½Nï¿½ï¿½ï¿½Xï¿½g ---
     Dim rows()    As ReactionRow
     Dim rowCount  As Long
     Dim nodeList() As String
@@ -250,25 +248,25 @@ Public Sub ParseAndSelectNodes()
 
         If Len(trimmedLine) = 0 Then GoTo Skip1
         If Left(trimmedLine, 5) = "=====" Then GoTo Skip1
-        If InStr(line, "‰×d”Ô†") > 0 Then
+        If InStr(line, "ï¿½×dï¿½Ôï¿½") > 0 Then
             loadNumber = ExtractLoadNumber(line)
             loadName = ExtractLoadName(line)
             GoTo Skip1
         End If
-        If InStr(trimmedLine, "ß“_”Ô†") > 0 Then GoTo Skip1
+        If InStr(trimmedLine, "ï¿½ß“_ï¿½Ôï¿½") > 0 Then GoTo Skip1
 
-        If Left(trimmedLine, 2) = "‡Œv" Then
+        If Left(trimmedLine, 2) = "ï¿½ï¿½ï¿½v" Then
             parts = SplitNormalized(trimmedLine)
             If UBound(parts) < 6 Then
-                Debug.Print "Warning: ‡ŒvsƒtƒB[ƒ‹ƒh•s‘« (line " & lineNum & ")"
+                Debug.Print "Warning: ï¿½ï¿½ï¿½vï¿½sï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½sï¿½ï¿½ (line " & lineNum & ")"
                 GoTo Skip1
             End If
             If Not ValidateNumericParts(parts, 1, 6, lineNum) Then GoTo Skip1
-            nodeStr = "‡Œv"
+            nodeStr = "ï¿½ï¿½ï¿½v"
         ElseIf IsNumeric(Left(trimmedLine, InStr(trimmedLine & " ", " ") - 1)) Then
             parts = SplitNormalized(trimmedLine)
             If UBound(parts) < 6 Then
-                Debug.Print "Warning: ß“_sƒtƒB[ƒ‹ƒh•s‘« (line " & lineNum & ")"
+                Debug.Print "Warning: ï¿½ß“_ï¿½sï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½sï¿½ï¿½ (line " & lineNum & ")"
                 GoTo Skip1
             End If
             If Not IsNumeric(parts(0)) Then GoTo Skip1
@@ -289,7 +287,7 @@ Public Sub ParseAndSelectNodes()
         rows(rowCount).rmx = rmx: rows(rowCount).rmy = rmy: rows(rowCount).rmz = rmz
         rowCount = rowCount + 1
 
-        ' oŒ»‡ƒ†ƒj[ƒNƒŠƒXƒg‚Ö’Ç‰Á
+        ' ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½jï¿½[ï¿½Nï¿½ï¿½ï¿½Xï¿½gï¿½Ö’Ç‰ï¿½
         Dim alreadyExists As Boolean
         alreadyExists = False
         If nodeCount > 0 Then alreadyExists = IsInList(nodeStr, nodeList)
@@ -303,11 +301,11 @@ Skip1:
     Close #fileNum
 
     If rowCount = 0 Then
-        MsgBox "ƒf[ƒ^s‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½B", vbExclamation, "ParseAndSelectNodes"
+        MsgBox "ï¿½fï¿½[ï¿½^ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½B", vbExclamation, "ParseAndSelectNodes"
         Exit Sub
     End If
 
-    ' --- FormNodeSelect ‚Åß“_‘I‘ğ ---
+    ' --- FormNodeSelect ï¿½Åß“_ï¿½Iï¿½ï¿½ ---
     Dim frm As FormNodeSelect
     Set frm = New FormNodeSelect
     Dim j As Integer
@@ -334,25 +332,25 @@ Skip1:
     Unload frm
 
     If selCount = 0 Then
-        MsgBox "ß“_”Ô†‚ª‘I‘ğ‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB", vbExclamation, "ParseAndSelectNodes"
+        MsgBox "ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½B", vbExclamation, "ParseAndSelectNodes"
         Exit Sub
     End If
 
-    ' --- V‹KƒV[ƒgì¬ & ƒwƒbƒ_[ ---
+    ' --- ï¿½Vï¿½Kï¿½Vï¿½[ï¿½gï¿½ì¬ & ï¿½wï¿½bï¿½_ï¿½[ ---
     Dim ws As Worksheet
     Dim sheetName As String
-    sheetName = "x“_”½—Í_" & Format(Now, "YYYYMMDD_HHMMSS")
+    sheetName = "ï¿½xï¿½_ï¿½ï¿½ï¿½ï¿½_" & Format(Now, "YYYYMMDD_HHMMSS")
     Set ws = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
     ws.Name = sheetName
 
     Dim headers As Variant
-    headers = Array("‰×d”Ô†", "‰×d–¼Ì", "ß“_”Ô†", "RX", "RY", "RZ", "RMX", "RMY", "RMZ")
+    headers = Array("ï¿½×dï¿½Ôï¿½", "ï¿½×dï¿½ï¿½ï¿½ï¿½", "ï¿½ß“_ï¿½Ôï¿½", "RX", "RY", "RZ", "RMX", "RMY", "RMZ")
     Dim c As Integer
     For c = 0 To 8
         ws.Cells(1, c + 1).Value = headers(c)
     Next c
 
-    ' --- “]‹L ---
+    ' --- ï¿½]ï¿½L ---
     Dim rowIdx As Long
     rowIdx = 2
     Dim k As Long
@@ -375,18 +373,18 @@ Skip1:
         End If
     Next k
 
-    MsgBox "Š®—¹‚µ‚Ü‚µ‚½B" & vbCrLf & _
-           "o—ÍƒV[ƒg–¼: " & sheetName & vbCrLf & _
-           "“]‹Ls”: " & (rowIdx - 2) & " s", vbInformation, "ParseAndSelectNodes"
+    MsgBox "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B" & vbCrLf & _
+           "ï¿½oï¿½ÍƒVï¿½[ï¿½gï¿½ï¿½: " & sheetName & vbCrLf & _
+           "ï¿½]ï¿½Lï¿½sï¿½ï¿½: " & (rowIdx - 2) & " ï¿½s", vbInformation, "ParseAndSelectNodes"
     Exit Sub
 
 FileOpenError2:
-    MsgBox "ƒtƒ@ƒCƒ‹‚ğŠJ‚¯‚Ü‚¹‚ñ‚Å‚µ‚½B" & vbCrLf & Err.Description, vbCritical, "ParseAndSelectNodes"
+    MsgBox "ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Jï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½B" & vbCrLf & Err.Description, vbCritical, "ParseAndSelectNodes"
 
 End Sub
 
 ' -------------------------------------------------------
-' 1s•ª‚ğƒV[ƒg‚Ö‘‚«‚Ş
+' 1ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Vï¿½[ï¿½gï¿½Öï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ' -------------------------------------------------------
 Private Sub WriteRow(ByVal ws As Worksheet, ByVal rowIdx As Long, _
                      ByVal loadNum As Long, ByVal loadNm As String, _
@@ -395,7 +393,7 @@ Private Sub WriteRow(ByVal ws As Worksheet, ByVal rowIdx As Long, _
                      ByVal rmx As Double, ByVal rmy As Double, ByVal rmz As Double)
     ws.Cells(rowIdx, 1).Value = loadNum
     ws.Cells(rowIdx, 2).Value = loadNm
-    ' ß“_”Ô†‚ª”’l•¶š—ñ‚È‚ç LongA"‡Œv"‚È‚ç‚»‚Ì‚Ü‚Ü•¶š—ñ
+    ' ï¿½ß“_ï¿½Ôï¿½ï¿½ï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ Longï¿½A"ï¿½ï¿½ï¿½v"ï¿½È‚ç‚»ï¿½Ì‚Ü‚Ü•ï¿½ï¿½ï¿½ï¿½ï¿½
     If IsNumeric(nodeVal) Then
         ws.Cells(rowIdx, 3).Value = CLng(nodeVal)
     Else
