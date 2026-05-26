@@ -116,13 +116,11 @@ Public Sub CreateFormNodeSelect()
 
     Set frm = vbp.VBComponents.Add(3)
     frm.Name = "FormNodeSelect"
+    frm.Properties("Caption") = Chr(31680) & Chr(28857) & Chr(30058) & Chr(21495) & Chr(36984) & Chr(25246)
+    frm.Properties("Width") = 270
+    frm.Properties("Height") = 360
 
     With frm.Designer
-        .Caption = Chr(31680) & Chr(28857) & Chr(30058) & Chr(21495) & Chr(36984) & Chr(25246)
-        .Width = 270
-        .Height = 360
-        .StartUpPosition = 1
-
         Set ctrl = .Controls.Add("Forms.ListBox.1", "lstNodes")
         ctrl.Left = 6
         ctrl.Top = 6
