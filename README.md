@@ -1,112 +1,149 @@
-# test_260525_03 — VBA モジュールリファクタリング
+# test_260525_03 — VBA マクロ解説
 
-## 概要
+## セットアップ手順
 
-`test_260525_03.xlsm` の VBA プロジェクトを整理した。
-重複していたモジュール・フォームを削除し、命名を統一した上で、
-マクロがユーザーから正しく見える状態に修正した。
+### ① VBS でモジュールをインポート（コマンドプロンプト）
+
+```
+cscript apply_refactor.vbs <xlsm のフルパス>
+```
+
+`ParseSupportReaction.bas` と `Module01.bas` を Excel に取り込む。
 
 ---
 
-## 変更前の問題点
+### ② フォームを生成（Excel 上でマクロ実行）
 
-| 問題 | 詳細 |
-|------|------|
-| `UserForm2` の名前不一致 | `ParseSupportReaction` 内で `New FormNodeSelect` と参照しているが、フォームの VB_Name は `UserForm2` のままだったため実行時エラー |
-| `Module1` が重複 | `ParseSupportReaction` に移植済みの古い実装が残っていた |
-| `UserForm1` が重複 | `UserForm01` の古いコピーが残っていた |
-| `Option Private Module` | `ParseSupportReaction` にこの宣言があり、`ParseAndSelectNodes` / `FilterByNode` が Alt+F8 のマクロ一覧に表示されなかった |
+Alt+F8 から以下の 2 つを順番に実行する。
 
----
+| マクロ名 | 生成されるフォーム |
+|---|---|
+| `CreateFormNodeSelect` | 節点番号選択ダイアログ |
+| `CreateUserForm01` | DAT 出力プレビューダイアログ |
 
-## 実施した変更
-
-### VBA プロジェクト内（.xlsm バイナリ）
-
-| 対象 | 変更内容 |
-|------|----------|
-| `UserForm2` | VB_Name・OLE ディレクトリ・dir ストリーム・PROJECT ストリームすべてで `FormNodeSelect` に改名 |
-| `ParseSupportReaction` | 先頭の `Option Private Module` 行を削除 |
-| `Module1` | 内容をスタブ（`Attribute VB_Name = "Module1"` のみ）に差し替え |
-| `UserForm1` | 内容をスタブ（属性行のみ）に差し替え |
-| `Module01` | 末尾に `RunParseAndSelectNodes` / `RunFilterByNode` の公開ラッパーサブを追加 |
-
-### ソースファイル（`test_260525_03/` フォルダ）
-
-| ファイル | 変更 |
-|----------|------|
-| `FormNodeSelect.frm` | 新規作成（`UserForm2.frm` を改名・VB_Name 修正） |
-| `FormNodeSelect.frx` | 新規作成（`UserForm2.frx` をそのままコピー） |
-| `Module01.bas` | ラッパーサブ 2 件を追記 |
-| `ParseSupportReaction.bas` | `Option Private Module` 行を削除 |
-| `Module1.bas` | 削除 |
-| `UserForm1.frm` / `.frx` | 削除 |
-| `UserForm2.frm` / `.frx` | 削除（→ FormNodeSelect に改名） |
-
-### 変更後のモジュール構成
-
-```
-test_260525_03.xlsm
-├── Module01          ← FormatValue / GenerateCombText / SaveDatFile / ShowForm
-│                        + RunParseAndSelectNodes / RunFilterByNode (追加)
-├── ParseSupportReaction  ← ParseAndSelectNodes / FilterByNode（Public・Alt+F8 から呼出可）
-├── CopyToOpenBook    ← 変更なし
-├── UserForm01        ← 変更なし
-├── FormNodeSelect    ← 節点番号選択ダイアログ（旧 UserForm2）
-├── Module1           ← スタブ（空）
-└── UserForm1         ← スタブ（空）
-```
+> **必要な設定（初回のみ）**  
+> Excel → オプション → セキュリティセンター → セキュリティセンターの設定  
+> → マクロの設定 →「VBA プロジェクト オブジェクト モデルへのアクセスを信頼する」にチェック
 
 ---
 
-## 生成したファイル
+## マクロ一覧
 
-### `patch_vba.py`
+### Module01
 
-xlsm バイナリを直接パッチする Python スクリプト。
-Excel を起動せずに VBA ソースを書き換えるために実装した。
-
-**主要な処理フロー:**
-
-```
-xlsm (ZIP) を読み込む
-  └─ xl/vbaProject.bin を取り出す（OLE Compound File Binary）
-       ├─ 各モジュールストリーム（VBA/Module01 等）を特定
-       │    └─ MS-OVBA 圧縮を解凍して VBA ソースを取得
-       ├─ ソースを編集（削除・追記・改名）
-       ├─ MS-OVBA 圧縮で再圧縮してストリームに書き戻す
-       ├─ OLE ディレクトリエントリのサイズフィールドを更新
-       ├─ VBA/dir ストリームを再圧縮（MODULENAME を改名）
-       ├─ PROJECT ストリームを更新（BaseClass= を改名）
-       └─ OLE ディレクトリの UTF-16LE 名フィールドを改名
-xlsm (ZIP) に書き戻す
-```
-
-**実装のポイント:**
-
-- **MS-OVBA 圧縮**: LZ77 + フラグバイト方式（MS-OVBA 2.4.1 仕様）を Python で実装。
-  チャンクヘッダの式は `header = (n_comp - 1) | 0xB000`（`n_comp` = トークンバイト数）。
-- **OLE FAT チェーン走査**: olefile ライブラリの内部構造を利用してセクタチェーンを特定し、
-  bytearray への直接書き込みでストリームを上書き。
-- **ディレクトリエントリのサイズ更新**: ストリーム内容を縮小した際、
-  OLE ディレクトリエントリのサイズフィールド（エントリ先頭 +120 バイト目）を
-  新しい論理サイズに更新しないと、ゼロパディング部分をデコンプレッサが誤って
-  次チャンクと解釈してクラッシュする。このフィールドの更新が核心的な修正点。
+#### `ShowForm`
+UserForm01（DAT 出力プレビュー）を開く。  
+Alt+F8 から直接呼び出せるメインエントリポイント。
 
 ---
 
-## 使い方
+#### `RunParseAndSelectNodes`
+支点反力テキストを読み込み、節点番号を選択して新規シートへ転記する。  
+→ 内部で `ParseSupportReaction.ParseAndSelectNodes` を呼ぶラッパー。
 
-リファクタリングをやり直す場合（元の xlsm から再実行）:
+---
 
-```bash
-# 元ファイルに戻してから実行
-git checkout HEAD -- test_260525_03.xlsm
-python3 patch_vba.py
+#### `RunFilterByNode`
+既存の支点反力シートから指定節点番号の行だけを抽出して新規シートへコピーする。  
+→ 内部で `ParseSupportReaction.FilterByNode` を呼ぶラッパー。
+
+---
+
+#### `GenerateCombText` *(Function)*
+アクティブシートの荷重組み合わせ表を読み取り、STRUDL DAT 形式のテキストを生成して返す。
+
+**シートの想定レイアウト**
+
+```
+        | 組合番号1 | 組合番号2 | ...
+荷重番号1|  係数      |  係数    | ...
+荷重番号2|  係数      |  係数    | ...
 ```
 
-依存ライブラリ:
+- 1 行目の各列 = 組み合わせ番号（数値）
+- 1 列目の各行 = 荷重番号（数値）
+- セルの値が 0 の場合はその荷重を出力しない
 
-```bash
-pip install olefile oletools
+**出力例**
+
+```
+Load comb 1 comb 1 1.2 2 1.0
+Load comb 2 comb 1 1.0 3 0.8
+```
+
+---
+
+#### `SaveDatFile`
+`GenerateCombText` で生成したテキストをダイアログで指定したパスに `.dat` ファイルとして保存する。  
+デフォルトのファイル名は `<ブック名>_comb.dat`。
+
+---
+
+#### `CreateFormNodeSelect` *(セットアップ用)*
+`FormNodeSelect`（節点番号選択ダイアログ）を VBA コードで生成する。  
+**セットアップ時に 1 回だけ実行する。**
+
+生成されるコントロール：
+- `lstNodes` — 節点番号リスト（複数選択可）
+- `btnOK` / `btnCancel` ボタン
+
+---
+
+#### `CreateUserForm01` *(セットアップ用)*
+`UserForm01`（DAT 出力プレビューダイアログ）を VBA コードで生成する。  
+**セットアップ時に 1 回だけ実行する。**
+
+生成されるコントロール：
+- `cmbTemplate` — 出力テンプレート選択（現在は `STRUDL dat` のみ）
+- `txtPreview` — 出力テキストのプレビュー表示欄
+- `btnPreview` — プレビューを再生成
+- `btnCreate` — DAT ファイルを保存
+- `btnCancel` — 閉じる
+
+---
+
+### ParseSupportReaction
+
+#### `ParseAndSelectNodes`
+支点反力テキストファイルを読み込み、節点番号を選択して結果を新規シートへ転記する。
+
+**操作フロー**
+
+1. ファイル選択ダイアログで支点反力 `.txt` を選択
+2. テキストを 1 パースして全行を収集、節点番号のユニーク一覧を作成
+3. `FormNodeSelect` ダイアログで出力したい節点番号を選択（複数可）
+4. 選択した節点の行だけを新規シート（`支点反力_YYYYMMDD_HHMMSS`）へ転記
+
+**新規シートのヘッダー**
+
+| 荷重番号 | 荷重名称 | 節点番号 | RX | RY | RZ | RMX | RMY | RMZ |
+|---|---|---|---|---|---|---|---|---|
+
+---
+
+#### `FilterByNode`
+既に Excel に読み込まれている支点反力シートを対象に、指定した節点番号の行だけを抽出する。  
+（テキストファイルの再読み込みなしで繰り返しフィルタリングしたいときに使う）
+
+**操作フロー**
+
+1. InputBox で抽出元シート名を入力
+2. InputBox で抽出する節点番号をカンマ区切りで入力  
+   例：`1,3,合計`
+3. 条件に一致する行を新規シート（`抽出_YYYYMMDD_HHMMSS`）へコピー
+
+---
+
+## ファイル構成
+
+```
+260526_01/
+├── apply_refactor.vbs          ← セットアップ用 VBScript
+├── test_260525_03.xlsm         ← 対象 Excel ファイル
+└── test_260525_03/
+    ├── Module01.bas            ← メインモジュール（CP932）
+    ├── ParseSupportReaction.bas← 支点反力パーサ（CP932）
+    ├── CopyToOpenBook.bas      ← 範囲コピーユーティリティ
+    ├── FormNodeSelect.frm/.frx ← 節点選択フォーム（参照用）
+    └── UserForm01.frm/.frx     ← DAT 出力フォーム（参照用）
 ```
